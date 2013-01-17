@@ -54,7 +54,7 @@ fromCStringError err x | x == nullPtr = throwErrno err
 fromCStringDefault :: String -> CString -> IO String
 fromCStringDefault d x = fromCString x >>= \r -> return (fromMaybe d r)
 
-fromCStringPluralDefault :: Num a => String -> String -> a -> CString -> IO String
+fromCStringPluralDefault :: (Eq a, Num a) => String -> String -> a -> CString -> IO String
 fromCStringPluralDefault def def_plural n s
     | n == 1 = fromCStringDefault def s
     | otherwise = fromCStringDefault def_plural s

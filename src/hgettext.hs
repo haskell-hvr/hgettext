@@ -4,7 +4,7 @@ import qualified Language.Haskell.Exts as H
 import System.Environment
 import System.Console.GetOpt
 
-import Data.Generics.PlateData
+import Data.Generics.Uniplate.Data
 
 import Distribution.Simple.PreProcess.Unlit
 

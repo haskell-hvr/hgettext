@@ -122,7 +122,7 @@ updateLocalBuildInfo l =
         dom = getDomainNameDefault sMap (getPackageName l)
         tar = targetDataDir l
         [catMS, domMS] = map (uncurry formatMacro) [(domDef, dom), (catDef, tar)]
-    in (appendCPPOptions [domMS,catMS] . appendExtension [CPP]) l
+    in (appendCPPOptions [domMS,catMS] . appendExtension [EnableExtension CPP]) l
 
 installPOFiles :: Args -> InstallFlags -> PackageDescription -> LocalBuildInfo -> IO ()
 installPOFiles _ _ _ l = 
