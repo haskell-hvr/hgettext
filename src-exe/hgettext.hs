@@ -54,6 +54,7 @@ toTranslate f (H.ParseOk z) = nub [ (0, s)
                                         (H.Lit _
                                             (H.String _ s _slit)) <- universeBi z :: [H.Exp H.SrcSpanInfo]
                                   , x == f]
+toTranslate f (H.ParseFailed _ _) = error "Parse error"
 toTranslate _ _ = []
 
 -- Create list of messages from a single file
