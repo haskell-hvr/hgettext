@@ -51,6 +51,8 @@ parseArgs args =
 
 toTranslate :: String -> H.ParseResult H.Module -> [(Int, String)]
 toTranslate f (H.ParseOk z) = nub [ (0, s) | H.App (H.Var (H.UnQual (H.Ident x))) (H.Lit (H.String s)) <- universeBi z, x == f]
+toTranslate f (H.ParseFailed _ _) = error "Parse error"
+
 toTranslate _ _ = []
 
 -- Create list of messages from a single file
