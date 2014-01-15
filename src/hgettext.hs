@@ -10,6 +10,7 @@ import Distribution.Simple.PreProcess.Unlit
 
 import Data.List
 import Data.Char
+import Data.Function (on)
 import System.FilePath
 
 import Paths_hgettext (version)
@@ -51,7 +52,8 @@ parseArgs args =
 
 toTranslate :: String -> H.ParseResult (H.Module H.SrcSpanInfo) -> [(Int, String)]
 toTranslate f (H.ParseOk z) =
-    nub [ (H.srcSpanStartLine (H.srcInfoSpan l), s)
+    nubBy ((==) `on` snd)
+        [ (H.srcSpanStartLine (H.srcInfoSpan l), s)
         | H.App _ (H.Var _ (H.UnQual _ (H.Ident _ x)))
                   (H.Lit _ (H.String l s _)) <- universeBi z
         , x == f
