@@ -1,3 +1,4 @@
+module Main where
 
 import qualified Language.Haskell.Exts.Annotated as H
 
@@ -50,26 +51,29 @@ parseArgs args =
     where header = "Usage: hgettext [OPTION] [INPUTFILE] ..."
 
 
-toTranslate :: String -> H.ParseResult (H.Module H.SrcSpanInfo) -> [(Int, String)]
+toTranslate :: String
+            -> H.ParseResult (H.Module H.SrcSpanInfo)
+            -> [(Int, String)]
 toTranslate f (H.ParseOk z) =
-    nubBy ((==) `on` snd)
-        [ (H.srcSpanStartLine (H.srcInfoSpan l), s)
+    nub [ (H.srcSpanStartLine (H.srcInfoSpan l), s)
         | H.App _ (H.Var _ (H.UnQual _ (H.Ident _ x)))
                   (H.Lit _ (H.String l s _)) <- universeBi z
         , x == f
         ]
 toTranslate _ _ = []
 
--- Create list of messages from a single file
-formatMessages :: String -> [(Int, String)] -> String
-formatMessages src l = concat $ map potEntry l
-    where potEntry (l, s) = unlines [
-                             "#: " ++ src ++ ":" ++ (show l),
+formatMessage :: String
+              -> [(String, Int)]
+              -> String
+formatMessage s locs = unlines $
+                            map (uncurry formatLoc) locs ++
+                            [
                              "msgid " ++ (show s),
                              "msgstr \"\"",
                              ""
                             ]
-
+  where
+    formatLoc src l = "#: " ++ src ++ ":" ++ (show l)
 
 writePOTFile :: [String] -> String
 writePOTFile l = concat $ [potHeader] ++ l
@@ -89,15 +93,27 @@ writePOTFile l = concat $ [potHeader] ++ l
                                "\"Content-Transfer-Encoding: 8bit\\n\"",
                                ""]
 
+parseFile :: String
+          -> IO (H.ParseResult (H.Module H.SrcSpanInfo))
+parseFile "-" = fmap H.parseFileContents getContents
+parseFile f   = H.parseFile f
+
 process :: Options -> [String] -> IO ()
 process Options{printVersion = True} _ = 
     putStrLn $ "hgettext, version " ++ (showVersion version)
 
 process opts fl = do
-  t <- mapM read' fl
-  writeFile (outputFile opts) $ writePOTFile $ map (\(n,c) -> formatMessages n $ toTranslate (keyword opts) c) t
-    where read' "-" = getContents >>= \c -> return ("-", H.parseFileContents c)
-          read' f = H.parseFile f >>= \m -> return (f, m)
+  parseResults <- mapM parseFile fl
+
+  let messages = [ (str, (filename, lineNumber))
+                 | (filename, ast) <- zip fl parseResults
+                 , (lineNumber, str) <- toTranslate (keyword opts) ast
+                 ]
+
+      formatted = [ formatMessage s (map snd xs)
+                  | xs@((s, _):_) <- groupBy ((==) `on` fst) $ sort messages
+                  ]
+  writeFile (outputFile opts) $ writePOTFile formatted
 
 main = 
     getArgs >>= parseArgs >>= uncurry process
