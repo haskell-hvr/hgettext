@@ -24,7 +24,6 @@ Library
 
 Executable hgettext
         Main-Is:                hgettext.hs
-        Extensions:             TemplateHaskell
         Hs-Source-Dirs:         src        
         Build-Depends:          base>=3.0.3.0 && <5, uniplate, haskell-src-exts
         Other-Modules:          Paths_hgettext
