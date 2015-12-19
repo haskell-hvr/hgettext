@@ -1,5 +1,5 @@
 Name:                   hgettext
-Version:                0.1.30
+Version:                0.1.31
 Cabal-Version:          >= 1.6
 
 License:                BSD3
@@ -25,7 +25,6 @@ Library
 Executable hgettext
         Main-Is:                hgettext.hs
         Extensions:             TemplateHaskell
-        Hs-Source-Dirs:         src        
+        Hs-Source-Dirs:         src
         Build-Depends:          base>=3.0.3.0 && <5, uniplate, haskell-src-exts
         Other-Modules:          Paths_hgettext
-
