@@ -49,8 +49,15 @@ parseArgs args =
     where header = "Usage: hgettext [OPTION] [INPUTFILE] ..."
 
 
-toTranslate :: String -> H.ParseResult H.Module -> [(Int, String)]
-toTranslate f (H.ParseOk z) = nub [ (0, s) | H.App (H.Var (H.UnQual (H.Ident x))) (H.Lit (H.String s)) <- universeBi z, x == f]
+toTranslate :: String -> H.ParseResult (H.Module H.SrcSpanInfo) -> [(Int, String)]
+toTranslate f (H.ParseOk z) = nub [ (0, s)
+                                  | H.App _
+                                        (H.Var _
+                                            (H.UnQual _
+                                                (H.Ident  _ x)))
+                                        (H.Lit _
+                                            (H.String _ s _slit)) <- universeBi z :: [H.Exp H.SrcSpanInfo]
+                                  , x == f]
 toTranslate _ _ = []
 
 -- Create list of messages from a single file
