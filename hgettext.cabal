@@ -14,6 +14,8 @@ bug-reports:         https://github.com/hvr/hgettext/issues
 synopsis:            Bindings to libintl.h (gettext, bindtextdomain)
 description:         This package provides bindings to the @gettext@ internationalization and localization (i18n) library
 
+tested-with: GHC==8.2.2, GHC==8.0.2, GHC==7.10.3, GHC==7.8.4, GHC==7.6.3, GHC==7.4.2
+
 source-repository head
   type:              git
   location:          https://github.com/hvr/hgettext.git
