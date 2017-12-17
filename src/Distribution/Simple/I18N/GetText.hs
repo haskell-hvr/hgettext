@@ -46,7 +46,7 @@
 --
 -- > ...
 -- > prepareI18N = do
--- >    setLocale LC_ALL (Just "") 
+-- >    setLocale LC_ALL (Just "")
 -- >    bindTextDomain __MESSAGE_CATALOG_DOMAIN__ (Just __MESSAGE_CATALOG_DIR__)
 -- >    textDomain __MESSAGE_CATALOG_DOMAIN__
 -- >
@@ -66,9 +66,9 @@
 -- will not recompile, thus you should execute @cabal clean@ to
 -- cleanup the build and restart it again from the configuration. This
 -- is temporary bug, it will be fixed in next releases.
--- 
+--
 
-module Distribution.Simple.I18N.GetText 
+module Distribution.Simple.I18N.GetText
     (
      installGetTextHooks,
      gettextDefaultMain
@@ -93,9 +93,9 @@ import System.Directory
 import System.Process
 
 -- | Default main function, same as
--- 
+--
 -- > defaultMainWithHooks $ installGetTextHooks simpleUserHooks
--- 
+--
 gettextDefaultMain :: IO ()
 gettextDefaultMain = defaultMainWithHooks $ installGetTextHooks simpleUserHooks
 
@@ -105,18 +105,18 @@ gettextDefaultMain = defaultMainWithHooks $ installGetTextHooks simpleUserHooks
 installGetTextHooks :: UserHooks -- ^ initial user hooks
                     -> UserHooks -- ^ patched user hooks
 installGetTextHooks uh = uh{
-                           confHook = \a b -> 
-                                      (confHook uh) a b >>= 
+                           confHook = \a b ->
+                                      (confHook uh) a b >>=
                                       return . updateLocalBuildInfo,
 
-                           postInst = \a b c d -> 
-                                      (postInst uh) a b c d >> 
+                           postInst = \a b c d ->
+                                      (postInst uh) a b c d >>
                                       installPOFiles a b c d
                          }
 
 
 updateLocalBuildInfo :: LocalBuildInfo -> LocalBuildInfo
-updateLocalBuildInfo l = 
+updateLocalBuildInfo l =
     let sMap = getCustomFields l
         [domDef, catDef] = map ($ sMap) [getDomainDefine, getMsgCatalogDefine]
         dom = getDomainNameDefault sMap (getPackageName l)
@@ -125,7 +125,7 @@ updateLocalBuildInfo l =
     in (appendCPPOptions [domMS,catMS] . appendExtension [EnableExtension CPP]) l
 
 installPOFiles :: Args -> InstallFlags -> PackageDescription -> LocalBuildInfo -> IO ()
-installPOFiles _ _ _ l = 
+installPOFiles _ _ _ l =
     let sMap = getCustomFields l
         destDir = targetDataDir l
         dom = getDomainNameDefault sMap (getPackageName l)
@@ -135,20 +135,20 @@ installPOFiles _ _ _ l =
           let targetDir = destDir </> bname </> "LC_MESSAGES"
           -- ensure we have directory destDir/{loc}/LC_MESSAGES
           createDirectoryIfMissing True targetDir
-          system $ "msgfmt --output-file=" ++ 
-                     (targetDir </> dom <.> "mo") ++ 
+          system $ "msgfmt --output-file=" ++
+                     (targetDir </> dom <.> "mo") ++
                      " " ++ file
     in do
       filelist <- getPoFilesDefault sMap
       -- copy all whose name is in the form of dir/{loc}.po to the
       -- destDir/{loc}/LC_MESSAGES/dom.mo
       -- with the 'msgfmt' tool
-      mapM_ installFile filelist      
+      mapM_ installFile filelist
 
 forBuildInfo :: LocalBuildInfo -> (BuildInfo -> BuildInfo) -> LocalBuildInfo
-forBuildInfo l f = 
+forBuildInfo l f =
     let a = l{localPkgDescr = updPkgDescr (localPkgDescr l)}
-        updPkgDescr x = x{library = updLibrary (library x), 
+        updPkgDescr x = x{library = updLibrary (library x),
                           executables = updExecs (executables x)}
         updLibrary Nothing = Nothing
         updLibrary (Just x) = Just $ x{libBuildInfo = f (libBuildInfo x)}
@@ -157,13 +157,13 @@ forBuildInfo l f =
     in a
 
 appendExtension :: [Extension] -> LocalBuildInfo -> LocalBuildInfo
-appendExtension exts l = 
+appendExtension exts l =
     forBuildInfo l updBuildInfo
     where updBuildInfo x = x{defaultExtensions = updExts (defaultExtensions x)}
           updExts s = nub (s ++ exts)
 
 appendCPPOptions :: [String] -> LocalBuildInfo -> LocalBuildInfo
-appendCPPOptions opts l = 
+appendCPPOptions opts l =
     forBuildInfo l updBuildInfo
     where updBuildInfo x = x{cppOptions = updOpts (cppOptions x)}
           updOpts s = nub (s ++ opts)
@@ -171,7 +171,7 @@ appendCPPOptions opts l =
 formatMacro name value = "-D" ++ name ++ "=" ++ (show value)
 
 targetDataDir :: LocalBuildInfo -> FilePath
-targetDataDir l = 
+targetDataDir l =
     let dirTmpls = installDirTemplates l
         prefix' = prefix dirTmpls
         data' = datadir dirTmpls
@@ -204,4 +204,3 @@ getPoFilesDefault al = toFileList $ findInParametersDefault al "x-gettext-po-fil
           -- from Blow your mind (HaskellWiki)
           -- splits string by newline, space and comma
           split' x = concatMap lines $ concatMap words $ unfoldr (\b -> fmap (const . (second $ drop 1) . break (==',') $ b) . listToMaybe $ b) x
-

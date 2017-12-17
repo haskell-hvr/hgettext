@@ -1,5 +1,5 @@
 
-import qualified Language.Haskell.Exts as H 
+import qualified Language.Haskell.Exts as H
 
 import System.Environment
 import System.Console.GetOpt
@@ -22,15 +22,15 @@ data Options = Options {
     } deriving Show
 
 options :: [OptDescr (Options->Options)]
-options = 
+options =
     [
-     Option ['o'] ["output"] 
-                (ReqArg (\o opts -> opts {outputFile = o}) "FILE") 
+     Option ['o'] ["output"]
+                (ReqArg (\o opts -> opts {outputFile = o}) "FILE")
                 "write output to specified file",
-     Option ['d'] ["default-domain"] 
+     Option ['d'] ["default-domain"]
             (ReqArg (\d opts -> opts {outputFile = d ++ ".po"}) "NAME")
             "use NAME.po instead of messages.po",
-     Option ['k'] ["keyword"] 
+     Option ['k'] ["keyword"]
             (ReqArg (\d opts -> opts {keyword = d}) "WORD")
             "function name, in which wrapped searched words",
      Option [] ["version"]
@@ -42,7 +42,7 @@ options =
 defaultOptions = Options "messages.po" "__" False
 
 parseArgs :: [String] -> IO (Options, [String])
-parseArgs args = 
+parseArgs args =
     case getOpt Permute options args of
       (o, n, []) -> return (foldl (flip id) defaultOptions o, n)
       (_, _, errs) -> ioError (userError (concat errs ++ usageInfo header options))
@@ -90,7 +90,7 @@ writePOTFile l = concat $ [potHeader] ++ l
                                ""]
 
 process :: Options -> [String] -> IO ()
-process Options{printVersion = True} _ = 
+process Options{printVersion = True} _ =
     putStrLn $ "hgettext, version " ++ (showVersion version)
 
 process opts fl = do
@@ -99,6 +99,5 @@ process opts fl = do
     where read' "-" = getContents >>= \c -> return ("-", H.parseFileContents c)
           read' f = H.parseFile f >>= \m -> return (f, m)
 
-main = 
+main =
     getArgs >>= parseArgs >>= uncurry process
-
