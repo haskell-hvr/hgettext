@@ -74,23 +74,20 @@ module Distribution.Simple.I18N.GetText
      gettextDefaultMain
     ) where
 
-import Distribution.Simple
-import Distribution.Simple.Setup as S
-import Distribution.Simple.LocalBuildInfo
-import Distribution.PackageDescription
-import Distribution.Simple.Configure
-import Distribution.Simple.InstallDirs as I
-import Distribution.Simple.Utils
+import           Distribution.PackageDescription
+import           Distribution.Simple
+import           Distribution.Simple.InstallDirs    as I
+import           Distribution.Simple.LocalBuildInfo
+import           Distribution.Simple.Setup          as S
+import           Distribution.Simple.Utils
 
-import Language.Haskell.Extension
-
-import Control.Monad
-import Control.Arrow (second)
-import Data.Maybe (listToMaybe, maybeToList, fromMaybe)
-import Data.List (unfoldr,nub,null)
-import System.FilePath
-import System.Directory
-import System.Process
+import           Control.Arrow                      (second)
+import           Control.Monad
+import           Data.List                          (nub, unfoldr)
+import           Data.Maybe                         (fromMaybe, listToMaybe)
+import           System.Directory
+import           System.FilePath
+import           System.Process
 
 -- | Default main function, same as
 --
@@ -150,7 +147,7 @@ forBuildInfo l f =
     let a = l{localPkgDescr = updPkgDescr (localPkgDescr l)}
         updPkgDescr x = x{library = updLibrary (library x),
                           executables = updExecs (executables x)}
-        updLibrary Nothing = Nothing
+        updLibrary Nothing  = Nothing
         updLibrary (Just x) = Just $ x{libBuildInfo = f (libBuildInfo x)}
         updExecs x = map updExec x
         updExec x = x{buildInfo = f (buildInfo x)}
@@ -168,6 +165,7 @@ appendCPPOptions opts l =
     where updBuildInfo x = x{cppOptions = updOpts (cppOptions x)}
           updOpts s = nub (s ++ opts)
 
+formatMacro :: Show a => [Char] -> a -> [Char]
 formatMacro name value = "-D" ++ name ++ "=" ++ (show value)
 
 targetDataDir :: LocalBuildInfo -> FilePath
@@ -200,7 +198,7 @@ getMsgCatalogDefine al = findInParametersDefault al "x-gettext-msg-cat-def" "__M
 getPoFilesDefault :: [(String, String)] -> IO [String]
 getPoFilesDefault al = toFileList $ findInParametersDefault al "x-gettext-po-files" ""
     where toFileList "" = return []
-          toFileList x = liftM concat $ mapM matchFileGlob $ split' x
+          toFileList x  = liftM concat $ mapM matchFileGlob $ split' x
           -- from Blow your mind (HaskellWiki)
           -- splits string by newline, space and comma
           split' x = concatMap lines $ concatMap words $ unfoldr (\b -> fmap (const . (second $ drop 1) . break (==',') $ b) . listToMaybe $ b) x

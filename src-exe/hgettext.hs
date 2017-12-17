@@ -1,23 +1,19 @@
 
-import qualified Language.Haskell.Exts as H
+import qualified Language.Haskell.Exts       as H
 
-import System.Environment
-import System.Console.GetOpt
+import           System.Console.GetOpt
+import           System.Environment
 
-import Data.Generics.Uniplate.Data
+import           Data.Generics.Uniplate.Data
 
-import Distribution.Simple.PreProcess.Unlit
+import           Data.List
 
-import Data.List
-import Data.Char
-import System.FilePath
-
-import Paths_hgettext (version)
-import Data.Version (showVersion)
+import           Data.Version                (showVersion)
+import           Paths_hgettext              (version)
 
 data Options = Options {
-      outputFile :: String,
-      keyword :: String,
+      outputFile   :: String,
+      keyword      :: String,
       printVersion :: Bool
     } deriving Show
 
@@ -38,7 +34,7 @@ options =
             "print version of hgettexts"
     ]
 
-
+defaultOptions :: Options
 defaultOptions = Options "messages.po" "__" False
 
 parseArgs :: [String] -> IO (Options, [String])
@@ -62,7 +58,7 @@ toTranslate _ _ = []
 
 -- Create list of messages from a single file
 formatMessages :: String -> [(Int, String)] -> String
-formatMessages src l = concat $ map potEntry l
+formatMessages src l0 = concat $ map potEntry l0
     where potEntry (l, s) = unlines [
                              "#: " ++ src ++ ":" ++ (show l),
                              "msgid " ++ (show s),
@@ -99,5 +95,6 @@ process opts fl = do
     where read' "-" = getContents >>= \c -> return ("-", H.parseFileContents c)
           read' f = H.parseFile f >>= \m -> return (f, m)
 
+main :: IO ()
 main =
     getArgs >>= parseArgs >>= uncurry process

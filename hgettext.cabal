@@ -34,6 +34,8 @@ library
                    , Cabal            >=1.14   && <1.25
                    , setlocale        >=0.0.3  && <1.1
 
+  ghc-options:       -Wall
+
 executable hgettext
   default-language:  Haskell2010
 
@@ -49,3 +51,5 @@ executable hgettext
 
   build-depends:     uniplate         >=1.6.12 && <1.7
                    , haskell-src-exts >=1.18   && <1.21
+
+  ghc-options:       -Wall

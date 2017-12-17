@@ -11,12 +11,12 @@ module Text.I18N.GetText (
                           textDomain
                          ) where
 
-import Foreign.C.Types
-import Foreign.C.String
-import Foreign.C.Error
-import Foreign.Ptr
-import Data.Maybe (fromMaybe)
-import System.Locale.SetLocale
+import           Data.Maybe              (fromMaybe)
+import           Foreign.C.Error
+import           Foreign.C.String
+import           Foreign.C.Types
+import           Foreign.Ptr
+import           System.Locale.SetLocale
 
 
 foreign import ccall unsafe "libintl.h gettext" c_gettext
@@ -61,7 +61,7 @@ fromCStringPluralDefault def def_plural n s
 
 
 withCStringMaybe :: Maybe String -> (CString -> IO a) -> IO a
-withCStringMaybe Nothing f = f nullPtr
+withCStringMaybe Nothing f    = f nullPtr
 withCStringMaybe (Just str) f = withCString str f
 
 -- |getText wraps GNU gettext function. It returns translated string for the
