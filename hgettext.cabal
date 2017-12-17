@@ -3,6 +3,7 @@ Version:                0.1.30
 Cabal-Version:          >= 1.6
 
 License:                BSD3
+License-file:           LICENSE
 
 Author:                 Vasyl Pasternak
 Maintainer:             vasyl.pasternak@gmail.com
