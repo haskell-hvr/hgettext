@@ -64,11 +64,11 @@ withCStringMaybe :: Maybe String -> (CString -> IO a) -> IO a
 withCStringMaybe Nothing f    = f nullPtr
 withCStringMaybe (Just str) f = withCString str f
 
--- |getText wraps GNU gettext function. It returns translated string for the
+-- | 'getText' wraps GNU gettext@ function. It returns translated string for the
 -- input messages. If translated string not found the input string will be
 -- returned.
 --
--- The most common usage of this function is to declare function __:
+-- The most common usage of this function is to declare function @__@:
 --
 -- > __ = unsafePerformIO . getText
 --
@@ -81,7 +81,7 @@ getText s =
     withCString s $ \s' ->
         c_gettext s' >>= fromCStringDefault s
 
--- |dGetText wraps GNU dgettext function. It works similar to 'getText'
+-- | 'dGetText' wraps GNU dgettext function. It works similar to 'getText'
 -- but also could take domain name.
 --
 dGetText :: Maybe String        -- ^ domain name, if 'Nothing' ---
@@ -93,7 +93,7 @@ dGetText domainname msgid =
         withCString msgid $ \msg' ->
             c_dgettext dn' msg' >>= fromCStringDefault msgid
 
--- |dcGetText wraps GNU dcgettext function. It works similar to 'dGetText'
+-- | 'dcGetText' wraps GNU dcgettext function. It works similar to 'dGetText'
 -- but also takes category id
 dcGetText :: Maybe String       -- ^ domain name, if 'Nothing' ---
                                 -- default domain will be used
@@ -106,7 +106,7 @@ dcGetText domainname cat msgid =
             c_dcgettext dn' msg' (categoryToCInt cat) >>=
             fromCStringDefault msgid
 
--- |nGetText wraps GNU ngettext function. It translates text string in the
+-- | 'nGetText' wraps GNU ngettext function. It translates text string in the
 -- user's native language, by lookilng up the approppiate plural form of the
 -- message.
 --
@@ -122,7 +122,7 @@ nGetText msgid msgid_plural n =
             c_ngettext msgid' msgid_plural' (fromInteger n) >>=
             fromCStringPluralDefault msgid msgid_plural n
 
--- |dnGetText wraps GNU dngettext function. It works similar to 'nGetText' but
+-- | 'dnGetText' wraps GNU dngettext function. It works similar to 'nGetText' but
 -- also takes domain name
 --
 dnGetText :: Maybe String       -- ^ domain name, if 'Nothing' ---
@@ -140,7 +140,7 @@ dnGetText domainname msgid msgid_plural n =
                 c_dngettext dn' msgid' msgid_plural' (fromInteger n) >>=
                 fromCStringPluralDefault msgid msgid_plural n
 
--- |dcnGetText wraps GNU dcngettext function. It works similar to 'dnGetText' but
+-- | 'dcnGetText' wraps GNU dcngettext function. It works similar to 'dnGetText' but
 -- also takes category id
 --
 dcnGetText :: Maybe String      -- ^ domain name, if 'Nothing' ---
@@ -160,7 +160,7 @@ dcnGetText domainname cat msgid msgid_plural n =
                              (fromInteger n) (categoryToCInt cat) >>=
                 fromCStringPluralDefault msgid msgid_plural n
 
--- |bindTextDomain sets the base directory of the hierarchy
+-- | 'bindTextDomain' sets the base directory of the hierarchy
 -- containing message catalogs for a given message domain.
 --
 -- Throws 'IOError' if fails
@@ -174,7 +174,7 @@ bindTextDomain domainname dirname =
       withCStringMaybe dirname $ \dir ->
           c_bindtextdomain domain dir >>= fromCStringError "bindTextDomain fails"
 
--- |textDomain sets domain for future 'getText' call
+-- | 'textDomain' sets domain for future 'getText' call
 --
 -- Throws 'IOError' if fails
 --
