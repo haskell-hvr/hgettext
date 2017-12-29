@@ -1,40 +1,40 @@
 module Main (main) where
 
+import           Control.DeepSeq
+import           Control.Exception
+import           Control.Monad
+import           Data.Generics.Uniplate.Data
+import qualified Data.Map                    as Map
+import qualified Data.Set                    as Set
+import           Data.Version                (showVersion)
 import qualified Language.Haskell.Exts       as H
-
 import           System.Console.GetOpt
 import           System.Environment
 import           System.Exit
 
-import           Data.Generics.Uniplate.Data
-
-import           Data.List
-
-import           Data.Version                (showVersion)
 import           Paths_hgettext              (version)
 
-data Options = Options {
-      outputFile   :: String,
-      keyword      :: String,
-      printVersion :: Bool
-    } deriving Show
+data Options = Options
+  { outputFile   :: FilePath
+  , keyword      :: String
+  , printVersion :: Bool
+  } deriving Show
 
 options :: [OptDescr (Options->Options)]
 options =
-    [
-     Option ['o'] ["output"]
-                (ReqArg (\o opts -> opts {outputFile = o}) "FILE")
-                "write output to specified file",
-     Option ['d'] ["default-domain"]
-            (ReqArg (\d opts -> opts {outputFile = d ++ ".po"}) "NAME")
-            "use NAME.po instead of messages.po",
-     Option ['k'] ["keyword"]
-            (ReqArg (\d opts -> opts {keyword = d}) "WORD")
-            "function name, in which wrapped searched words",
-     Option [] ["version"]
-            (NoArg (\opts -> opts {printVersion = True}))
-            "print version of hgettexts"
-    ]
+  [ Option ['o'] ["output"]
+           (ReqArg (\o opts -> opts {outputFile = o}) "FILE")
+           "write output to specified file"
+  , Option ['d'] ["default-domain"]
+           (ReqArg (\d opts -> opts {outputFile = d ++ ".po"}) "NAME")
+           "use NAME.po instead of messages.po"
+  , Option ['k'] ["keyword"]
+           (ReqArg (\d opts -> opts {keyword = d}) "WORD")
+           "function name, in which wrapped searched words"
+  , Option [] ["version"]
+           (NoArg (\opts -> opts {printVersion = True}))
+           "print version of hgettexts"
+  ]
 
 defaultOptions :: Options
 defaultOptions = Options "messages.po" "__" False
@@ -48,23 +48,24 @@ parseArgs args =
 
 
 toTranslate :: String -> H.Module H.SrcSpanInfo -> [(Int, String)]
-toTranslate f z = nub [ (0, s) | H.App _
-                                     (H.Var _
-                                         (H.UnQual _
-                                             (H.Ident  _ x)))
-                                     (H.Lit _
-                                         (H.String _ s _slit)) <- universeBi z :: [H.Exp H.SrcSpanInfo]
-                                  , x == f]
+toTranslate f z = [ (H.srcSpanStartLine (H.srcInfoSpan loc), s)
+                  | H.App _ (H.Var _
+                              (H.UnQual _
+                                (H.Ident  _ x)))
+                            (H.Lit _
+                              (H.String loc s _slit))
+                    <- universeBi z :: [H.Exp H.SrcSpanInfo]
+                  , x == f]
 
--- Create list of messages from a single file
-formatMessages :: String -> [(Int, String)] -> String
-formatMessages src l0 = concat $ map potEntry l0
-    where potEntry (l, s) = unlines [
-                             "#: " ++ src ++ ":" ++ (show l),
-                             "msgid " ++ (show s),
-                             "msgstr \"\"",
-                             ""
-                            ]
+formatMessage :: String -> [(FilePath, Int)] -> String
+formatMessage s locs = unlines $
+                       map (uncurry formatLoc) locs ++
+                       [ "msgid " ++ (show s)
+                       , "msgstr \"\""
+                       , ""
+                       ]
+  where
+    formatLoc src l = "#: " ++ src ++ ":" ++ (show l)
 
 
 writePOTFile :: [String] -> String
@@ -85,13 +86,18 @@ writePOTFile l = concat $ [potHeader] ++ l
                                "\"Content-Transfer-Encoding: 8bit\\n\"",
                                ""]
 
-process :: Options -> [String] -> IO ()
+process :: Options -> [FilePath] -> IO ()
 process Options{printVersion = True} _ =
     putStrLn $ "hgettext, version " ++ (showVersion version)
 process opts fl = do
-    t <- mapM readSource fl
+    dat <- forM fl $ \fn -> do
+      m <- readSource fn
+      evaluate $ force [ (s,(fn,loc)) | (loc,s) <- toTranslate (keyword opts) m ]
+
+    let entries = Map.fromListWith Set.union [ (s,Set.singleton (fn,loc)) | d <- dat, (s,(fn,loc)) <- d ]
+
     writeFile (outputFile opts) $ do
-      writePOTFile [ formatMessages n $ toTranslate (keyword opts) c | (n,c) <- t ]
+      writePOTFile [ formatMessage s (Set.toList locs) | (s,locs) <- Map.toList entries ]
   where
     readSource "-" = do
       c <- getContents
@@ -99,14 +105,14 @@ process opts fl = do
         H.ParseFailed loc msg -> do
           putStrLn (concat [ "<stdin>:", show (H.srcLine loc), ":", show (H.srcColumn loc), ": error: ", msg ])
           exitFailure
-        H.ParseOk m -> return ("-", m)
+        H.ParseOk m -> return m
     readSource f = do
       pm <- H.parseFile f
       case pm of
         H.ParseFailed loc msg -> do
           putStrLn (concat [ f, ":", show (H.srcLine loc), ":", show (H.srcColumn loc), ": error: ", msg ])
           exitFailure
-        H.ParseOk m -> return (f, m)
+        H.ParseOk m -> return m
 
 main :: IO ()
 main = getArgs >>= parseArgs >>= uncurry process
