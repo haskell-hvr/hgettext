@@ -90,6 +90,8 @@ import           System.Exit
 import           System.FilePath
 import           System.Process
 
+import           Internal
+
 -- | Default main function, same as
 --
 -- > defaultMainWithHooks $ installGetTextHooks simpleUserHooks
@@ -190,7 +192,6 @@ targetDataDir l =
 
 getPackageName :: LocalBuildInfo -> String
 getPackageName = fromPackageName . packageName . localPkgDescr
-    where fromPackageName (PackageName s) = s
 
 getCustomFields :: LocalBuildInfo -> [(String, String)]
 getCustomFields = customFieldsPD . localPkgDescr
