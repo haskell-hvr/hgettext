@@ -40,6 +40,10 @@ library
 
   ghc-options:       -Wall
 
+  -- temporary hack: https://github.com/haskell-hvr/hgettext/pull/3
+  if os(windows)
+    extra-libraries: libintl
+
 executable hgettext
   default-language:  Haskell2010
 
