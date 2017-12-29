@@ -1,8 +1,10 @@
+module Main (main) where
 
 import qualified Language.Haskell.Exts       as H
 
 import           System.Console.GetOpt
 import           System.Environment
+import           System.Exit
 
 import           Data.Generics.Uniplate.Data
 
@@ -45,17 +47,14 @@ parseArgs args =
     where header = "Usage: hgettext [OPTION] [INPUTFILE] ..."
 
 
-toTranslate :: String -> H.ParseResult (H.Module H.SrcSpanInfo) -> [(Int, String)]
-toTranslate f (H.ParseOk z) = nub [ (0, s)
-                                  | H.App _
-                                        (H.Var _
-                                            (H.UnQual _
-                                                (H.Ident  _ x)))
-                                        (H.Lit _
-                                            (H.String _ s _slit)) <- universeBi z :: [H.Exp H.SrcSpanInfo]
+toTranslate :: String -> H.Module H.SrcSpanInfo -> [(Int, String)]
+toTranslate f z = nub [ (0, s) | H.App _
+                                     (H.Var _
+                                         (H.UnQual _
+                                             (H.Ident  _ x)))
+                                     (H.Lit _
+                                         (H.String _ s _slit)) <- universeBi z :: [H.Exp H.SrcSpanInfo]
                                   , x == f]
-toTranslate f (H.ParseFailed _ _) = error "Parse error"
-toTranslate _ _ = []
 
 -- Create list of messages from a single file
 formatMessages :: String -> [(Int, String)] -> String
@@ -89,13 +88,25 @@ writePOTFile l = concat $ [potHeader] ++ l
 process :: Options -> [String] -> IO ()
 process Options{printVersion = True} _ =
     putStrLn $ "hgettext, version " ++ (showVersion version)
-
 process opts fl = do
-  t <- mapM read' fl
-  writeFile (outputFile opts) $ writePOTFile $ map (\(n,c) -> formatMessages n $ toTranslate (keyword opts) c) t
-    where read' "-" = getContents >>= \c -> return ("-", H.parseFileContents c)
-          read' f = H.parseFile f >>= \m -> return (f, m)
+    t <- mapM readSource fl
+    writeFile (outputFile opts) $ do
+      writePOTFile [ formatMessages n $ toTranslate (keyword opts) c | (n,c) <- t ]
+  where
+    readSource "-" = do
+      c <- getContents
+      case H.parseFileContents c of
+        H.ParseFailed loc msg -> do
+          putStrLn (concat [ "<stdin>:", show (H.srcLine loc), ":", show (H.srcColumn loc), ": error: ", msg ])
+          exitFailure
+        H.ParseOk m -> return ("-", m)
+    readSource f = do
+      pm <- H.parseFile f
+      case pm of
+        H.ParseFailed loc msg -> do
+          putStrLn (concat [ f, ":", show (H.srcLine loc), ":", show (H.srcColumn loc), ": error: ", msg ])
+          exitFailure
+        H.ParseOk m -> return (f, m)
 
 main :: IO ()
-main =
-    getArgs >>= parseArgs >>= uncurry process
+main = getArgs >>= parseArgs >>= uncurry process
