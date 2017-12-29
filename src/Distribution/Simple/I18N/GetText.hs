@@ -77,14 +77,16 @@ import           Distribution.PackageDescription
 import           Distribution.Simple
 import           Distribution.Simple.InstallDirs    as I
 import           Distribution.Simple.LocalBuildInfo
-import           Distribution.Simple.Setup          as S
+import           Distribution.Simple.Setup
 import           Distribution.Simple.Utils
+import           Distribution.Verbosity
 
 import           Control.Arrow                      (second)
 import           Control.Monad
 import           Data.List                          (nub, unfoldr)
 import           Data.Maybe                         (fromMaybe, listToMaybe)
 import           System.Directory
+import           System.Exit
 import           System.FilePath
 import           System.Process
 
@@ -103,15 +105,19 @@ gettextDefaultMain = defaultMainWithHooks $ installGetTextHooks simpleUserHooks
 --
 installGetTextHooks :: UserHooks -- ^ initial user hooks
                     -> UserHooks -- ^ patched user hooks
-installGetTextHooks uh = uh{
-                           confHook = \a b ->
-                                      (confHook uh) a b >>=
-                                      return . updateLocalBuildInfo,
+installGetTextHooks uh =
+    uh { confHook = \a b -> do
+           lbi <- (confHook uh) a b
+           return (updateLocalBuildInfo lbi)
 
-                           postInst = \a b c d ->
-                                      (postInst uh) a b c d >>
-                                      installPOFiles a b c d
-                         }
+       , postInst = \args iflags pd lbi -> do
+           postInst uh args iflags pd lbi
+           installPOFiles (fromFlagOrDefault maxBound (installVerbosity iflags)) lbi
+
+       , postCopy = \args cflags pd lbi -> do
+           postCopy uh args cflags pd lbi
+           installPOFiles (fromFlagOrDefault maxBound (copyVerbosity cflags)) lbi
+       }
 
 
 updateLocalBuildInfo :: LocalBuildInfo -> LocalBuildInfo
@@ -123,8 +129,8 @@ updateLocalBuildInfo l =
         [catMS, domMS] = map (uncurry formatMacro) [(domDef, dom), (catDef, tar)]
     in (appendCPPOptions [domMS,catMS] . appendExtension [EnableExtension CPP]) l
 
-installPOFiles :: Args -> InstallFlags -> PackageDescription -> LocalBuildInfo -> IO ()
-installPOFiles _ _ _ l =
+installPOFiles :: Verbosity -> LocalBuildInfo -> IO ()
+installPOFiles verb l =
     let sMap = getCustomFields l
         destDir = targetDataDir l
         dom = getDomainNameDefault sMap (getPackageName l)
@@ -134,9 +140,13 @@ installPOFiles _ _ _ l =
           let targetDir = destDir </> bname </> "LC_MESSAGES"
           -- ensure we have directory destDir/{loc}/LC_MESSAGES
           createDirectoryIfMissing True targetDir
-          system $ "msgfmt --output-file=" ++
-                     (targetDir </> dom <.> "mo") ++
-                     " " ++ file
+          ph <- runProcess "msgfmt" [ "--output-file=" ++ (targetDir </> dom <.> "mo"), file ]
+                           Nothing Nothing Nothing Nothing Nothing
+          ec <- waitForProcess ph
+          case ec of
+            ExitSuccess   -> return ()
+            -- only warn for now, as the package may still be usable even if the msg catalogs are missing
+            ExitFailure n -> warn verb ("'msgfmt' exited with non-zero status (rc = " ++ show n ++ ")")
     in do
       filelist <- getPoFilesDefault sMap
       -- copy all whose name is in the form of dir/{loc}.po to the
