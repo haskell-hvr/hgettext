@@ -24,13 +24,13 @@
 --
 -- The module defines following @.cabal@ fields:
 --
---  [@x-gettext-domain-name@] Name of the domain. One ofmore
+--  [@x-gettext-domain-name@] Name of the domain. One or more
 --  alphanumeric characters separated by hyphens or underlines. When
 --  not set, package name will be used.
 --
 --  [@x-gettext-po-files@] List of files with translations. Could be
---  used a limited form of wildcards, e.g.: @x-gettext-po-files:
---  po/*.po@
+--  used a limited form of wildcards, e.g.:
+--  @x-gettext-po-files: po/*.po@
 --
 --  [@x-gettext-domain-def@] Name of the macro, in which domain name
 --  will be passed to the program. Default value is
@@ -57,21 +57,20 @@
 -- > ...
 --
 --
--- /NOTE:/ files, passed in the @x-gettext-po-files@ are not
+-- __NOTE:__ files, passed in the @x-gettext-po-files@ are not
 -- automatically added to the source distribution, so they should be
 -- also added to the @extra-source-files@ parameter, along with
 -- translation template file (usually @message.pot@)
 --
--- /WARNING:/ sometimes, when only configuration targets changes, code
+-- __WARNING:__ sometimes, when only configuration targets changes, code
 -- will not recompile, thus you should execute @cabal clean@ to
 -- cleanup the build and restart it again from the configuration. This
 -- is temporary bug, it will be fixed in next releases.
 --
 
 module Distribution.Simple.I18N.GetText
-    (
-     installGetTextHooks,
-     gettextDefaultMain
+    ( installGetTextHooks
+    , gettextDefaultMain
     ) where
 
 import           Distribution.PackageDescription
@@ -97,7 +96,10 @@ gettextDefaultMain :: IO ()
 gettextDefaultMain = defaultMainWithHooks $ installGetTextHooks simpleUserHooks
 
 -- | Installs hooks, used by GetText module to install
--- PO files to the system. Previous won't be disabled
+-- PO files to the system.
+--
+-- Pre-existing hook handlers are executed before the GetText
+-- handlers.
 --
 installGetTextHooks :: UserHooks -- ^ initial user hooks
                     -> UserHooks -- ^ patched user hooks

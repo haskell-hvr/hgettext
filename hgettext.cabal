@@ -12,7 +12,11 @@ copyright:           2009 Vasyl Pasternak
 category:            Text
 bug-reports:         https://github.com/hvr/hgettext/issues
 synopsis:            Bindings to libintl.h (gettext, bindtextdomain)
-description:         This package provides bindings to the @gettext@ internationalization and localization (i18n) library
+description:         This package provides bindings to the @gettext@ internationalization and localization (i18n) library.
+                     .
+                     This package provides support for custom @Setup.hs@ scripts via the "Distribution.Simple.I18N.GetText" module.
+                     .
+                     A user-contributed tutorial can be found in the [Haskell Wiki](https://wiki.haskell.org/Internationalization_of_Haskell_programs_using_gettext).
 
 tested-with: GHC==8.2.2, GHC==8.0.2, GHC==7.10.3, GHC==7.8.4, GHC==7.6.3, GHC==7.4.2
 
