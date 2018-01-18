@@ -57,10 +57,18 @@ toTranslate f z = [ (H.srcSpanStartLine (H.srcInfoSpan loc), s)
                     <- universeBi z :: [H.Exp H.SrcSpanInfo]
                   , x == f]
 
+showStringLit :: String -> String
+showStringLit s0 = '"' : concatMap showChar s0 ++ "\""
+    where
+      showChar '"' = "\\\""
+      showChar '\\' = "\\\\"
+      showChar '\n' = "\\n"
+      showChar c = return c
+
 formatMessage :: String -> [(FilePath, Int)] -> String
 formatMessage s locs = unlines $
                        map (uncurry formatLoc) locs ++
-                       [ "msgid " ++ (show s)
+                       [ "msgid " ++ (showStringLit s)
                        , "msgstr \"\""
                        , ""
                        ]
