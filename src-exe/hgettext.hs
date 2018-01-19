@@ -11,6 +11,7 @@ import qualified Language.Haskell.Exts       as H
 import           System.Console.GetOpt
 import           System.Environment
 import           System.Exit
+import           System.IO                   (IOMode(WriteMode), hPutStr, hSetEncoding, utf8, withFile)
 
 import           Paths_hgettext              (version)
 
@@ -94,6 +95,12 @@ writePOTFile l = concat $ [potHeader] ++ l
                                "\"Content-Transfer-Encoding: 8bit\\n\"",
                                ""]
 
+writeFileUtf8 :: FilePath -> String -> IO ()
+writeFileUtf8 fp content =
+  withFile fp WriteMode $ \h -> do
+    hSetEncoding h utf8
+    hPutStr h content
+
 process :: Options -> [FilePath] -> IO ()
 process Options{printVersion = True} _ =
     putStrLn $ "hgettext, version " ++ (showVersion version)
@@ -104,7 +111,7 @@ process opts fl = do
 
     let entries = Map.fromListWith Set.union [ (s,Set.singleton (fn,loc)) | d <- dat, (s,(fn,loc)) <- d ]
 
-    writeFile (outputFile opts) $ do
+    writeFileUtf8 (outputFile opts) $ do
       writePOTFile [ formatMessage s (Set.toList locs) | (s,locs) <- Map.toList entries ]
   where
     readSource "-" = do
