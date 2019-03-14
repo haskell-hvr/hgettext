@@ -78,7 +78,7 @@ import           Distribution.Simple
 import           Distribution.Simple.InstallDirs    as I
 import           Distribution.Simple.LocalBuildInfo
 import           Distribution.Simple.Setup
-import           Distribution.Simple.Utils
+import           Distribution.Simple.Utils          (warn)
 import           Distribution.Verbosity
 
 import           Control.Arrow                      (second)
@@ -90,7 +90,7 @@ import           System.Exit
 import           System.FilePath
 import           System.Process
 
-import           Internal
+import           Internal                           (fromPackageName, matchFileGlob)
 
 -- | Default main function, same as
 --
