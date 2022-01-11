@@ -90,7 +90,7 @@ import           System.Exit
 import           System.FilePath
 import           System.Process
 
-import           Internal
+import           Internal                           (fromPackageName, matchFileGlob)
 
 -- | Default main function, same as
 --
@@ -150,7 +150,7 @@ installPOFiles verb l =
             -- only warn for now, as the package may still be usable even if the msg catalogs are missing
             ExitFailure n -> warn verb ("'msgfmt' exited with non-zero status (rc = " ++ show n ++ ")")
     in do
-      filelist <- getPoFilesDefault sMap
+      filelist <- getPoFilesDefault verb l sMap
       -- copy all whose name is in the form of dir/{loc}.po to the
       -- destDir/{loc}/LC_MESSAGES/dom.mo
       -- with the 'msgfmt' tool
@@ -208,10 +208,10 @@ getDomainDefine al = findInParametersDefault al "x-gettext-domain-def" "__MESSAG
 getMsgCatalogDefine :: [(String, String)] -> String
 getMsgCatalogDefine al = findInParametersDefault al "x-gettext-msg-cat-def" "__MESSAGE_CATALOG_DIR__"
 
-getPoFilesDefault :: [(String, String)] -> IO [String]
-getPoFilesDefault al = toFileList $ findInParametersDefault al "x-gettext-po-files" ""
+getPoFilesDefault :: Verbosity -> LocalBuildInfo  -> [(String, String)] -> IO [String]
+getPoFilesDefault verb l al = toFileList $ findInParametersDefault al "x-gettext-po-files" ""
     where toFileList "" = return []
-          toFileList x  = liftM concat $ mapM matchFileGlob $ split' x
+          toFileList x  = liftM concat $ mapM (matchFileGlob verb (localPkgDescr l)) $ split' x
           -- from Blow your mind (HaskellWiki)
           -- splits string by newline, space and comma
           split' x = concatMap lines $ concatMap words $ unfoldr (\b -> fmap (const . (second $ drop 1) . break (==',') $ b) . listToMaybe $ b) x
