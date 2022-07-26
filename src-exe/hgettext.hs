@@ -4,6 +4,7 @@ import           Control.DeepSeq
 import           Control.Exception
 import           Control.Monad
 import           Data.Generics.Uniplate.Data
+import           Data.List.Split             (splitOn)
 import qualified Data.Map                    as Map
 import qualified Data.Set                    as Set
 import           Data.Version                (showVersion)
@@ -18,6 +19,7 @@ import           Paths_hgettext              (version)
 data Options = Options
   { outputFile   :: FilePath
   , keyword      :: String
+  , extensions   :: [H.Extension]
   , printVersion :: Bool
   } deriving Show
 
@@ -32,13 +34,16 @@ options =
   , Option ['k'] ["keyword"]
            (ReqArg (\d opts -> opts {keyword = d}) "WORD")
            "function name, in which wrapped searched words"
+  , Option ['e'] ["lang-exts"]
+           (ReqArg (\es opts -> opts {extensions = map (\e -> H.parseExtension e) (splitOn "," es)}) "EXTENSIONS...")
+           "language extensions to enable/disable when parsing input (prefix \"No\" to an extension to disable it)"
   , Option [] ["version"]
            (NoArg (\opts -> opts {printVersion = True}))
            "print version of hgettexts"
   ]
 
 defaultOptions :: Options
-defaultOptions = Options "messages.po" "__" False
+defaultOptions = Options "messages.po" "__" [] False
 
 parseArgs :: [String] -> IO (Options, [String])
 parseArgs args =
@@ -116,13 +121,13 @@ process opts fl = do
   where
     readSource "-" = do
       c <- getContents
-      case H.parseFileContents c of
+      case H.parseFileContentsWithExts (extensions opts) c of
         H.ParseFailed loc msg -> do
           putStrLn (concat [ "<stdin>:", show (H.srcLine loc), ":", show (H.srcColumn loc), ": error: ", msg ])
           exitFailure
         H.ParseOk m -> return m
     readSource f = do
-      pm <- H.parseFile f
+      pm <- H.parseFileWithExts (extensions opts) f
       case pm of
         H.ParseFailed loc msg -> do
           putStrLn (concat [ f, ":", show (H.srcLine loc), ":", show (H.srcColumn loc), ": error: ", msg ])
