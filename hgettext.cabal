@@ -60,9 +60,11 @@ executable hgettext
                    , containers
                    , filepath
 
-  build-depends:     deepseq          >=1.1     && <1.5
-                   , haskell-src-exts >=1.18    && <1.21
-                   , uniplate         >=1.6.12  && <1.7
-                   , split            >=0.2.3.4 && <0.2.4
+  build-depends:     deepseq          >=1.1      && <1.5
+                   , cpphs            >=1.20.9.1 && <1.20.10
+                   , haskell-src-exts >=1.18     && <1.21
+                   , uniplate         >=1.6.12   && <1.7
+                   , split            >=0.2.3.4  && <0.2.4
+                   , extra            >=1.7.10   && <1.8
 
   ghc-options:       -Wall

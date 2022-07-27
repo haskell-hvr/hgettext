@@ -8,11 +8,13 @@ import           Data.List.Split             (splitOn)
 import qualified Data.Map                    as Map
 import qualified Data.Set                    as Set
 import           Data.Version                (showVersion)
+import           Language.Preprocessor.Cpphs as C
 import qualified Language.Haskell.Exts       as H
 import           System.Console.GetOpt
 import           System.Environment
 import           System.Exit
 import           System.IO                   (IOMode(WriteMode), hPutStr, hSetEncoding, utf8, withFile)
+import           System.IO.Extra             (readFileUTF8)
 
 import           Paths_hgettext              (version)
 
@@ -20,6 +22,8 @@ data Options = Options
   { outputFile   :: FilePath
   , keyword      :: String
   , extensions   :: [H.Extension]
+  , cpp          :: Bool
+  , cpp_defs     :: [(String, String)]
   , printVersion :: Bool
   } deriving Show
 
@@ -37,13 +41,19 @@ options =
   , Option ['e'] ["lang-exts"]
            (ReqArg (\es opts -> opts {extensions = map (\e -> H.parseExtension e) (splitOn "," es)}) "EXTENSION...")
            "language extensions to enable/disable when parsing input (prefix \"No\" to an extension to disable it)"
+  , Option [] ["cpp"]
+           (NoArg (\opts -> opts {cpp = True}))
+           "do the C pre-processing"
+  , Option [] ["cpp-defs"]
+           (ReqArg (\defs opts -> opts {cpp_defs = map (\def -> let l = splitOn "=" def in (head l, last l)) (splitOn "," defs)}) "IDENTIFIER=VALUE...")
+           "C pre-processing defines list"
   , Option [] ["version"]
            (NoArg (\opts -> opts {printVersion = True}))
            "print version of hgettexts"
   ]
 
 defaultOptions :: Options
-defaultOptions = Options "messages.po" "__" [] False
+defaultOptions = Options "messages.po" "__" [] False [] False
 
 parseArgs :: [String] -> IO (Options, [String])
 parseArgs args =
@@ -119,18 +129,12 @@ process opts fl = do
     writeFileUtf8 (outputFile opts) $ do
       writePOTFile [ formatMessage s (Set.toList locs) | (s,locs) <- Map.toList entries ]
   where
-    readSource "-" = do
-      c <- getContents
-      case H.parseFileContentsWithExts (extensions opts) c of
-        H.ParseFailed loc msg -> do
-          putStrLn (concat [ "<stdin>:", show (H.srcLine loc), ":", show (H.srcColumn loc), ": error: ", msg ])
-          exitFailure
-        H.ParseOk m -> return m
     readSource f = do
-      pm <- H.parseFileWithExts (extensions opts) f
-      case pm of
+      let rf = if f == "-" then "<stdin>" else f
+      c <- (if f == "-" then getContents else readFileUTF8 f) >>= if cpp opts then C.runCpphs (C.defaultCpphsOptions {C.defines = cpp_defs opts}) rf else return
+      case H.parseFileContentsWithMode (H.defaultParseMode {H.parseFilename = rf, H.extensions = extensions opts}) c of
         H.ParseFailed loc msg -> do
-          putStrLn (concat [ f, ":", show (H.srcLine loc), ":", show (H.srcColumn loc), ": error: ", msg ])
+          putStrLn (concat [ rf, ":", show (H.srcLine loc), ":", show (H.srcColumn loc), ": error: ", msg ])
           exitFailure
         H.ParseOk m -> return m
 
