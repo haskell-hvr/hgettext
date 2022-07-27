@@ -35,7 +35,7 @@ options =
            (ReqArg (\d opts -> opts {keyword = d}) "WORD")
            "function name, in which wrapped searched words"
   , Option ['e'] ["lang-exts"]
-           (ReqArg (\es opts -> opts {extensions = map (\e -> H.parseExtension e) (splitOn "," es)}) "EXTENSIONS...")
+           (ReqArg (\es opts -> opts {extensions = map (\e -> H.parseExtension e) (splitOn "," es)}) "EXTENSION...")
            "language extensions to enable/disable when parsing input (prefix \"No\" to an extension to disable it)"
   , Option [] ["version"]
            (NoArg (\opts -> opts {printVersion = True}))
