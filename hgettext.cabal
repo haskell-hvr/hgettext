@@ -18,7 +18,21 @@ description:         This package provides bindings to the @gettext@ internation
                      .
                      A user-contributed tutorial can be found in the [Haskell Wiki](https://wiki.haskell.org/Internationalization_of_Haskell_programs_using_gettext).
 
-tested-with: GHC==8.2.2, GHC==8.0.2, GHC==8.0.1, GHC==7.10.3, GHC==7.8.4, GHC==7.6.3, GHC==7.4.2
+tested-with:
+  -- Constraint Cabal < 2.1 prevents building with GHC > 8.6
+  -- GHC == 9.4.2
+  -- GHC == 9.2.4
+  -- GHC == 9.0.2
+  -- GHC == 8.10.7
+  -- GHC == 8.8.4
+  GHC == 8.6.5
+  GHC == 8.4.4
+  GHC == 8.2.2
+  GHC == 8.0.2
+  GHC == 7.10.3
+  GHC == 7.8.4
+  GHC == 7.6.3
+  GHC == 7.4.2
 
 source-repository head
   type:              git
@@ -31,9 +45,10 @@ library
   other-modules:     Internal
 
   hs-source-dirs:    src
-  build-depends:     base             >=4.5    && <4.11
-                   , Cabal            >=1.14   && <1.25 || == 2.0.*
-                   , containers       >=0.4.2  && <0.6
+  build-depends:     base             >=4.5    && <4.13
+                   , Cabal            >=1.14   && <1.25 || >= 2.0 && < 2.3
+                       -- Cabal >= 2.4 fails on matchGlobFile
+                   , containers       >=0.4.2  && <0.7
                    , directory        >=1.1    && <1.4
                    , filepath         >=1.3    && <1.5
                    , process          >=1.1    && <1.7
@@ -62,9 +77,10 @@ executable hgettext
 
   build-depends:     deepseq          >=1.1      && <1.5
                    , cpphs            >=1.20.9.1 && <1.20.10
-                   , haskell-src-exts >=1.18     && <1.21
+                   , haskell-src-exts >=1.18     && <1.24
                    , uniplate         >=1.6.12   && <1.7
                    , split            >=0.2.3.4  && <0.2.4
-                   , extra            >=1.7.10   && <1.8
+                   , extra            >=0.1      && <1.8
+                       -- readFileUTF8 exists since extra-0.1
 
   ghc-options:       -Wall

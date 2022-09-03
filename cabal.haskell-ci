@@ -1,0 +1,4 @@
+branches: master ci*
+
+-- We atm only support Cabal<=2.2.*, but GHC 8.6.5 comes with Cabal-2.4
+installed: +all -Cabal -binary -containers -process -text -unix
