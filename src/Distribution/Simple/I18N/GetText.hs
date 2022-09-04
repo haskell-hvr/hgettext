@@ -125,11 +125,13 @@ installGetTextHooks uh =
 updateLocalBuildInfo :: LocalBuildInfo -> LocalBuildInfo
 updateLocalBuildInfo l =
     let sMap = getCustomFields l
-        [domDef, catDef] = map ($ sMap) [getDomainDefine, getMsgCatalogDefine]
+        domDef = getDomainDefine sMap
+        catDef = getMsgCatalogDefine sMap
         dom = getDomainNameDefault sMap (getPackageName l)
         tar = targetDataDir l
-        [catMS, domMS] = map (uncurry formatMacro) [(domDef, dom), (catDef, tar)]
-    in (appendCPPOptions [domMS,catMS] . appendExtension [EnableExtension CPP]) l
+        catMS = formatMacro domDef dom
+        domMS = formatMacro catDef tar
+    in appendCPPOptions [domMS,catMS] $ appendExtension [EnableExtension CPP] l
 
 installPOFiles :: Verbosity -> LocalBuildInfo -> IO ()
 installPOFiles verb l =
@@ -179,8 +181,8 @@ appendCPPOptions opts l =
     where updBuildInfo x = x{cppOptions = updOpts (cppOptions x)}
           updOpts s = nub (s ++ opts)
 
-formatMacro :: Show a => [Char] -> a -> [Char]
-formatMacro name value = "-D" ++ name ++ "=" ++ (show value)
+formatMacro :: Show a => String -> a -> String
+formatMacro name value = "-D" ++ name ++ "=" ++ show value
 
 targetDataDir :: LocalBuildInfo -> FilePath
 targetDataDir l =
