@@ -1,16 +1,16 @@
 cabal-version:       1.14
 name:                hgettext
-version:             0.1.31.0
+version:             0.1.40
 build-type:          Simple
 
 license:             BSD3
 license-file:        LICENSE
 
-author:              Vasyl Pasternak
-maintainer:          Herbert Valerio Riedel
+author:              Vasyl Pasternak, Herbert Valerio Riedel, Nikola Hadžić
+maintainer:          https://github.com/haskell-hvr/hgettext
 copyright:           2009 Vasyl Pasternak
 category:            Text
-bug-reports:         https://github.com/hvr/hgettext/issues
+bug-reports:         https://github.com/haskell-hvr/hgettext/issues
 synopsis:            Bindings to libintl.h (gettext, bindtextdomain)
 description:         This package provides bindings to the @gettext@ internationalization and localization (i18n) library.
                      .
@@ -34,9 +34,12 @@ tested-with:
   GHC == 7.6.3
   GHC == 7.4.2
 
+extra-source-files:
+  CHANGELOG.md
+
 source-repository head
   type:              git
-  location:          https://github.com/hvr/hgettext.git
+  location:          https://github.com/haskell-hvr/hgettext.git
 
 library
   default-language:  Haskell2010
