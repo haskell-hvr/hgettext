@@ -19,12 +19,11 @@ description:         This package provides bindings to the @gettext@ internation
                      A user-contributed tutorial can be found in the [Haskell Wiki](https://wiki.haskell.org/Internationalization_of_Haskell_programs_using_gettext).
 
 tested-with:
-  -- Constraint Cabal < 2.1 prevents building with GHC > 8.6
-  -- GHC == 9.4.2
-  -- GHC == 9.2.4
-  -- GHC == 9.0.2
-  -- GHC == 8.10.7
-  -- GHC == 8.8.4
+  GHC == 9.4.2
+  GHC == 9.2.4
+  GHC == 9.0.2
+  GHC == 8.10.7
+  GHC == 8.8.4
   GHC == 8.6.5
   GHC == 8.4.4
   GHC == 8.2.2
