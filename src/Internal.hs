@@ -5,10 +5,11 @@ module Internal where
 import           Distribution.Simple
 #if MIN_VERSION_Cabal(2,4,0)
 import           Distribution.Simple.Glob    (matchDirFileGlob)
+import           Distribution.Types.PackageDescription
 #else
 import qualified Distribution.Simple.Utils   as Utils (matchFileGlob)
+import           Distribution.PackageDescription
 #endif
-import           Distribution.Types.PackageDescription
 import           Distribution.Verbosity      (Verbosity)
 
 fromPackageName :: PackageName -> String
