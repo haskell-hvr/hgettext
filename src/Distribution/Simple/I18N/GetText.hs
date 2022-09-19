@@ -78,7 +78,7 @@ import           Distribution.Simple
 import           Distribution.Simple.InstallDirs    as I
 import           Distribution.Simple.LocalBuildInfo
 import           Distribution.Simple.Setup
-import           Distribution.Simple.Utils
+import           Distribution.Simple.Utils          (warn)
 import           Distribution.Verbosity
 
 import           Control.Arrow                      (second)
@@ -90,7 +90,7 @@ import           System.Exit
 import           System.FilePath
 import           System.Process
 
-import           Internal
+import           Internal                           (fromPackageName, matchFileGlob)
 
 -- | Default main function, same as
 --
@@ -125,11 +125,13 @@ installGetTextHooks uh =
 updateLocalBuildInfo :: LocalBuildInfo -> LocalBuildInfo
 updateLocalBuildInfo l =
     let sMap = getCustomFields l
-        [domDef, catDef] = map ($ sMap) [getDomainDefine, getMsgCatalogDefine]
+        domDef = getDomainDefine sMap
+        catDef = getMsgCatalogDefine sMap
         dom = getDomainNameDefault sMap (getPackageName l)
         tar = targetDataDir l
-        [catMS, domMS] = map (uncurry formatMacro) [(domDef, dom), (catDef, tar)]
-    in (appendCPPOptions [domMS,catMS] . appendExtension [EnableExtension CPP]) l
+        catMS = formatMacro domDef dom
+        domMS = formatMacro catDef tar
+    in appendCPPOptions [domMS,catMS] $ appendExtension [EnableExtension CPP] l
 
 installPOFiles :: Verbosity -> LocalBuildInfo -> IO ()
 installPOFiles verb l =
@@ -150,7 +152,7 @@ installPOFiles verb l =
             -- only warn for now, as the package may still be usable even if the msg catalogs are missing
             ExitFailure n -> warn verb ("'msgfmt' exited with non-zero status (rc = " ++ show n ++ ")")
     in do
-      filelist <- getPoFilesDefault sMap
+      filelist <- getPoFilesDefault verb l sMap
       -- copy all whose name is in the form of dir/{loc}.po to the
       -- destDir/{loc}/LC_MESSAGES/dom.mo
       -- with the 'msgfmt' tool
@@ -179,8 +181,8 @@ appendCPPOptions opts l =
     where updBuildInfo x = x{cppOptions = updOpts (cppOptions x)}
           updOpts s = nub (s ++ opts)
 
-formatMacro :: Show a => [Char] -> a -> [Char]
-formatMacro name value = "-D" ++ name ++ "=" ++ (show value)
+formatMacro :: Show a => String -> a -> String
+formatMacro name value = "-D" ++ name ++ "=" ++ show value
 
 targetDataDir :: LocalBuildInfo -> FilePath
 targetDataDir l =
@@ -208,10 +210,10 @@ getDomainDefine al = findInParametersDefault al "x-gettext-domain-def" "__MESSAG
 getMsgCatalogDefine :: [(String, String)] -> String
 getMsgCatalogDefine al = findInParametersDefault al "x-gettext-msg-cat-def" "__MESSAGE_CATALOG_DIR__"
 
-getPoFilesDefault :: [(String, String)] -> IO [String]
-getPoFilesDefault al = toFileList $ findInParametersDefault al "x-gettext-po-files" ""
+getPoFilesDefault :: Verbosity -> LocalBuildInfo  -> [(String, String)] -> IO [String]
+getPoFilesDefault verb l al = toFileList $ findInParametersDefault al "x-gettext-po-files" ""
     where toFileList "" = return []
-          toFileList x  = liftM concat $ mapM matchFileGlob $ split' x
+          toFileList x  = liftM concat $ mapM (matchFileGlob verb (localPkgDescr l)) $ split' x
           -- from Blow your mind (HaskellWiki)
           -- splits string by newline, space and comma
           split' x = concatMap lines $ concatMap words $ unfoldr (\b -> fmap (const . (second $ drop 1) . break (==',') $ b) . listToMaybe $ b) x
