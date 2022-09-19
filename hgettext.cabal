@@ -1,6 +1,6 @@
 cabal-version:       1.14
 name:                hgettext
-version:             0.1.40
+version:             0.1.40.1
 build-type:          Simple
 
 license:             BSD3
