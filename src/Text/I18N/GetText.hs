@@ -8,6 +8,7 @@ module Text.I18N.GetText (
                           dcGetText,
                           dcnGetText,
                           bindTextDomain,
+                          bindTextDomainCodeset,
                           textDomain
                          ) where
 
@@ -42,6 +43,9 @@ foreign import ccall unsafe "libintl.h bindtextdomain" c_bindtextdomain
 
 foreign import ccall unsafe "libintl.h textdomain" c_textdomain
     :: CString -> IO CString
+
+foreign import ccall unsafe "libintl.h bind_textdomain_codeset" c_bind_textdomain_codeset
+    :: CString -> CString -> IO CString
 
 fromCString :: CString -> IO (Maybe String)
 fromCString x | x == nullPtr = return Nothing
@@ -184,3 +188,14 @@ textDomain :: Maybe String      -- ^ domain name, if 'Nothing' than returns
 textDomain domainname =
     withCStringMaybe domainname $ \domain ->
         c_textdomain domain >>= fromCStringError "textDomain fails"
+
+-- | 'bindTextDomainCodeset' sets domain codeset for future 'getText' call
+--
+bindTextDomainCodeset :: String               -- ^ domain name
+                       -> Maybe String        -- ^ locale codeset or 'Nothing' to return
+                                              -- the active codeset for the given domain
+                       -> IO (Maybe String)   -- ^ return value
+bindTextDomainCodeset domainname dirname =
+    withCString domainname $ \domain ->
+        withCStringMaybe dirname $ \dir ->
+            c_bind_textdomain_codeset domain dir >>= fromCString
