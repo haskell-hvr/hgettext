@@ -1,4 +1,12 @@
-### 0.1.40.1
+## 0.1.40.2
+
+_Nikola Hadžić, 2025-01-13_
+
+- Library binding for [`bind_textdomain_codeset`](https://man.archlinux.org/man/core/gettext/bind_textdomain_codeset.3.en) function ([#26](https://github.com/haskell-hvr/hgettext/pull/26), contribution by Rafał Kuźnia)
+
+Tested with GHC 8.0.2 - 9.10.1.
+
+## 0.1.40.1
 
 _Andreas Abel, 2022-09-19_
 
