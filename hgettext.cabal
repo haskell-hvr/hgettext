@@ -75,10 +75,8 @@ executable hgettext
 
   hs-source-dirs:    src-exe
 
-  -- constraints inherited from lib:hgettext
-  build-depends:     base
-
-  build-depends:     containers       >=0.4.2    && <0.9
+  build-depends:     base             >=4.5      && <4.23
+                   , containers       >=0.4.2    && <0.9
                    , deepseq          >=1.1      && <1.6
                    , cpphs            >=1.20.9.1 && <1.20.11
                    , haskell-src-exts >=1.18     && <1.24
