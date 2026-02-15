@@ -83,7 +83,7 @@ executable hgettext
                    , containers
                    , filepath
 
-  build-depends:     deepseq          >=1.1      && <1.7
+  build-depends:     deepseq          >=1.1      && <1.6
                    , cpphs            >=1.20.9.1 && <1.20.11
                    , haskell-src-exts >=1.18     && <1.24
                    , uniplate         >=1.6.12   && <1.7
