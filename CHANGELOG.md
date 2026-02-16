@@ -1,3 +1,11 @@
+## 0.1.40.3
+
+_Nikola Hadžić, 2026-02-16_
+
+- Allow `Cabal ≥ 3.14` ([#28](https://github.com/haskell-hvr/hgettext/issues/28), contribution by Deepak)
+
+Tested with GHC 8.0.2 - 9.14.1.
+
 ## 0.1.40.2
 
 _Nikola Hadžić, 2025-01-13_
